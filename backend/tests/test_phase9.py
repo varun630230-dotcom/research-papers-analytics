@@ -11,7 +11,7 @@ Tests:
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from services.scoring_engine import (
     compute_criterion_scores,

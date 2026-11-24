@@ -8,7 +8,7 @@ import sys
 import os
 
 # Add backend directory to sys.path so imports work cleanly
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi.testclient import TestClient
 from main import app

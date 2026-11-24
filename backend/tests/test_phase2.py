@@ -8,7 +8,7 @@ import sys
 import os
 
 # Add backend directory to sys.path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from services.paper_search import (
     reconstruct_openalex_abstract,

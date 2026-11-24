@@ -1,33 +1,37 @@
 """
-Run All Phase Tests Across the Entire System
+ResearchGap AI - Run All Verified Test Suites
+==============================================
+Runs all 12 phase test suites across the system.
 """
+
 import subprocess
 import sys
+import os
 
-scripts = [
-    "backend/test_phase1.py",
-    "backend/test_phase2.py",
-    "backend/test_phase3.py",
-    "backend/test_phase4.py",
-    "backend/test_phase5.py",
-    "backend/test_phase6.py",
-    "backend/test_phase7.py",
-    "backend/test_phase8.py",
-    "backend/test_phase9.py",
-    "backend/test_phase10.py",
-    "backend/test_phase11.py",
-    "backend/test_phase13.py",
+TEST_SCRIPTS = [
+    "backend/tests/test_phase1.py",
+    "backend/tests/test_phase2.py",
+    "backend/tests/test_phase3.py",
+    "backend/tests/test_phase4.py",
+    "backend/tests/test_phase5.py",
+    "backend/tests/test_phase6.py",
+    "backend/tests/test_phase7.py",
+    "backend/tests/test_phase8.py",
+    "backend/tests/test_phase9.py",
+    "backend/tests/test_phase10.py",
+    "backend/tests/test_phase11.py",
+    "backend/tests/test_phase13.py",
 ]
 
 total_failed = 0
-for s in scripts:
-    print(f"\n--- Running {s} ---")
-    res = subprocess.run([sys.executable, s])
+for script in TEST_SCRIPTS:
+    print(f"\n--- Running {script} ---")
+    res = subprocess.run([sys.executable, script])
     if res.returncode != 0:
-        print(f"FAILED: {s}")
+        print(f"❌ FAILED: {script}")
         total_failed += 1
     else:
-        print(f"PASSED: {s}")
+        print(f"✅ PASSED: {script}")
 
 print("\n" + "=" * 60)
 if total_failed == 0:

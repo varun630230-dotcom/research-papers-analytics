@@ -11,7 +11,7 @@ Tests:
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from services.gap_detector import (
     build_gap_detection_prompt,

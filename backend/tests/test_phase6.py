@@ -11,7 +11,7 @@ Tests:
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from services.evidence_synthesizer import (
     build_synthesis_prompt,
