@@ -39,7 +39,7 @@ def get_config():
         "SEMANTIC_SCHOLAR_API_KEY": os.getenv("SEMANTIC_SCHOLAR_API_KEY", ""),
         
         # --- Gemini Settings ---
-        "GEMINI_MODEL": "gemini-2.0-flash",
+        "GEMINI_MODEL": os.getenv("GEMINI_MODEL", "gemini-flash-lite-latest"),
         "GEMINI_BASE_URL": "https://generativelanguage.googleapis.com/v1beta",
         
         # --- Server Settings ---
