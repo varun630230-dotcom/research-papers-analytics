@@ -23,6 +23,7 @@ from typing import Dict, Any, List, Optional
 from config import config
 from services.gemini_client import call_gemini_json, GeminiError
 from utils.text_cleaner import clean_text
+from utils.topic_context import extract_literature_context
 
 logger = logging.getLogger("researchgap.roadmap_generator")
 logging.basicConfig(level=logging.INFO)
@@ -127,16 +128,23 @@ def generate_deterministic_roadmap(
     domain: str,
     architecture: Dict[str, Any]
 ) -> Dict[str, Any]:
-    """Generates an 8-phase development roadmap tailored to the topic when GEMINI_API_KEY is not configured."""
+    """Generates an 8-phase development roadmap tailored to the topic and domain."""
+    ctx = extract_literature_context(topic=topic, domain=domain)
+    clean_top = ctx["topic"]
+    dom = ctx["domain"]
+    algo = ctx["algorithms"][0]
+    dataset = ctx["datasets"][0] if ctx["datasets"] else "domain benchmark corpora"
+    metric = ctx["metrics"][0]
+
     phases = [
         {
             "phase_number": 1,
             "title": "Phase 1: Problem Definition & Formalization",
-            "objective": f"Formalize the mathematical and architectural scope for {topic}.",
+            "objective": f"Formalize the mathematical and architectural scope for {clean_top}.",
             "tasks": [
-                f"Define objective functions and formal constraints for {topic}.",
-                "Establish quantifiable target metrics (e.g., convergence rate, latency budget, memory limit).",
-                "Draft the technical requirements specification and system scope."
+                f"Define objective functions and operational constraints for {clean_top}.",
+                f"Establish quantifiable target metrics ({metric}, latency budget, memory limit).",
+                f"Draft the technical requirements specification and system scope for {dom}."
             ],
             "deliverable": "Mathematical problem formulation document & engineering specification.",
             "estimated_weeks": 2
@@ -144,9 +152,9 @@ def generate_deterministic_roadmap(
         {
             "phase_number": 2,
             "title": "Phase 2: Literature Review & Baseline Selection",
-            "objective": "Select and reproduce state-of-the-art academic baselines.",
+            "objective": f"Select and reproduce state-of-the-art academic baselines for {clean_top}.",
             "tasks": [
-                "Select 3 to 4 open-source published baseline models from discovered literature.",
+                f"Select 3 to 4 open-source published baseline models ({algo} variants) from literature.",
                 "Set up reference benchmark environments in containerized Docker images.",
                 "Validate reproducible baseline numbers against reported publication metrics."
             ],
@@ -156,9 +164,9 @@ def generate_deterministic_roadmap(
         {
             "phase_number": 3,
             "title": "Phase 3: Dataset Collection & Curation",
-            "objective": f"Acquire, audit, and structure evaluation datasets in {domain or topic}.",
+            "objective": f"Acquire, audit, and structure evaluation datasets including {dataset}.",
             "tasks": [
-                "Gather standardized public benchmark datasets and domain-specific telemetry.",
+                f"Gather standardized public benchmark datasets ({dataset}) and domain telemetry.",
                 "Perform data quality profiling (missing attributes, label skew, distribution bounds).",
                 "Establish deterministic training, validation, and holdout test splits."
             ],
@@ -168,10 +176,10 @@ def generate_deterministic_roadmap(
         {
             "phase_number": 4,
             "title": "Phase 4: Data Preprocessing & Validation Pipelines",
-            "objective": "Build automated data transformation, tokenization, and partitioning pipelines.",
+            "objective": f"Build automated data transformation, tokenization, and cleaning pipelines for {dom}.",
             "tasks": [
-                "Implement feature normalization and synthetic noise injection scripts.",
-                "Create non-IID partitioning generators simulating extreme client/node skew.",
+                f"Implement feature normalization and synthetic noise injection scripts tailored for {clean_top}.",
+                "Create cross-validation generators simulating realistic domain and demographic shifts.",
                 "Build automated unit tests verifying pipeline integrity and zero data leakage."
             ],
             "deliverable": "Automated data preprocessing module with reproducible seed generation.",
@@ -180,11 +188,11 @@ def generate_deterministic_roadmap(
         {
             "phase_number": 5,
             "title": "Phase 5: Core System & Model Development",
-            "objective": "Implement proposed neural architecture and optimization engine.",
+            "objective": f"Implement proposed {algo} architecture and optimization engine.",
             "tasks": [
-                "Develop the core model architecture and parameter-efficient adapter layers.",
-                "Implement custom loss formulations with proximal/regularization terms.",
-                "Integrate asynchronous communication gateway and gradient compression modules."
+                f"Develop the core {algo} architecture and parameter-efficient adapter layers for {clean_top}.",
+                "Implement custom loss formulations with class-imbalance weighting.",
+                "Integrate asynchronous streaming pipeline and feature caching modules."
             ],
             "deliverable": "Fully functional model implementation with end-to-end training loop.",
             "estimated_weeks": 4
@@ -192,9 +200,9 @@ def generate_deterministic_roadmap(
         {
             "phase_number": 6,
             "title": "Phase 6: Rigorous Evaluation & Ablation Trials",
-            "objective": "Conduct comprehensive benchmark evaluations and ablation studies.",
+            "objective": f"Conduct comprehensive {metric} benchmark evaluations and ablation studies.",
             "tasks": [
-                "Benchmark empirical performance against all selected baseline models.",
+                f"Benchmark empirical performance ({metric}) against all selected baseline models.",
                 "Execute systematic ablation studies isolating each architectural component's impact.",
                 "Perform cross-domain out-of-distribution stress testing."
             ],
@@ -204,7 +212,7 @@ def generate_deterministic_roadmap(
         {
             "phase_number": 7,
             "title": "Phase 7: Hardware & Latency Optimization",
-            "objective": "Optimize computational throughput, memory usage, and inference latency.",
+            "objective": f"Optimize computational throughput, memory usage, and inference latency for {algo}.",
             "tasks": [
                 "Profile GPU kernel execution times and memory allocation bottlenecks.",
                 "Apply post-training quantization (INT8/FP8) and operator fusion.",
@@ -216,12 +224,13 @@ def generate_deterministic_roadmap(
         {
             "phase_number": 8,
             "title": "Phase 8: Production Deployment & Monitoring",
-            "objective": "Deploy the system into production infrastructure with continuous monitoring.",
+            "objective": f"Deploy the {clean_top} system into production infrastructure with continuous monitoring.",
             "tasks": [
                 "Package inference services into scalable Docker containers orchestrated via FastAPI.",
-                "Implement real-time Prometheus telemetry tracking latency, memory, and data drift.",
+                f"Implement real-time Prometheus telemetry tracking {metric}, latency, and data drift.",
                 "Publish comprehensive developer documentation, API schemas, and replication guide."
             ],
+            "deliverable": "Production-ready deployment repository with live monitoring dashboard.",
             "deliverable": "Production-ready deployment repository with live monitoring dashboard.",
             "estimated_weeks": 2
         }

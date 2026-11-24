@@ -18,6 +18,7 @@ from typing import Dict, Any, List, Optional
 from config import config
 from services.gemini_client import call_gemini_json, GeminiError
 from utils.text_cleaner import clean_text
+from utils.topic_context import extract_literature_context
 
 logger = logging.getLogger("researchgap.architecture_generator")
 logging.basicConfig(level=logging.INFO)
@@ -134,40 +135,46 @@ def generate_deterministic_architecture(
     research_gaps: List[Dict[str, Any]],
     tech_limitations: List[Dict[str, Any]]
 ) -> Dict[str, Any]:
-    """Generates a rule-grounded architectural recommendation when GEMINI_API_KEY is not configured."""
+    """Generates a dynamic, domain-specific architectural recommendation."""
+    ctx = extract_literature_context(topic=topic, domain=domain)
+    clean_top = ctx["topic"]
+    dom = ctx["domain"]
+    algo = ctx["algorithms"][0]
+    metric = ctx["metrics"][0]
+    
     top_gap = research_gaps[0] if research_gaps else {}
-    target_gap = top_gap.get("title", f"Primary Scalability Bottleneck in {topic}")
+    target_gap = top_gap.get("title", f"Methodological Rigor and Scalability in {clean_top}")
     
     return {
         "target_gap_addressed": target_gap,
         "problem_statement": (
-            f"Current implementations in {topic} suffer from communication overhead, memory saturation, "
-            f"and high synchronization latency under distributed heterogeneous constraints."
+            f"Current implementations in {clean_top} face severe challenges with {ctx['challenges'][0].lower()} "
+            f"when deployed in real-world high-throughput operational environments."
         ),
         "proposed_solution": (
-            f"A tiered, modular system architecture that decouples model training, gradient compression, "
-            f"and verification into asynchronous stages optimized for {domain or 'distributed computing'}."
+            f"A tiered, modular system architecture that decouples input ingestion, {algo} representation inference, "
+            f"and continuous verification into resilient asynchronous stages optimized for {dom}."
         ),
         "system_components": [
             {
-                "name": "Ingestion & Data Preparation Layer",
-                "role": "Data validation, feature normalization, and non-IID client partitioning",
-                "description": "Validates schema integrity, applies tokenization or image transforms, and handles streaming batches."
+                "name": "Ingestion & Feature Preparation Layer",
+                "role": "Schema validation, input tokenization / transform, and streaming batching",
+                "description": f"Validates incoming raw inputs, standardizes formats for {ctx['datasets'][0] if ctx['datasets'] else 'the target domain'}, and handles streaming queues."
             },
             {
-                "name": "Optimization & Training Engine",
-                "role": "Parameter-efficient model execution and gradient calculation",
-                "description": "Executes forward and backward passes using mixed-precision fp16/bf16 with gradient checkpointing."
+                "name": f"Core Representation & {algo} Engine",
+                "role": "High-throughput forward-pass inference and feature extraction",
+                "description": f"Executes model passes using mixed-precision fp16/bf16 with fused attention kernels to minimize latency."
             },
             {
-                "name": "Communication & Aggregation Gateway",
-                "role": "Asynchronous parameter synchronization and gossip routing",
-                "description": "Applies top-k gradient sparsification and compressed all-reduce to minimize network payload."
+                "name": "Decision & Classification Service",
+                "role": "Calibrated decision thresholding and confidence scoring",
+                "description": f"Applies temperature-scaled probability calibration and multi-label dispatch logic tailored for {clean_top}."
             },
             {
-                "name": "Verification & Continuous Benchmarking Engine",
-                "role": "Automated evaluation, drift tracking, and safety bounds",
-                "description": "Periodically evaluates model convergence against baseline validation suites and monitors degradation."
+                "name": "Verification & Continuous Drift Engine",
+                "role": "Automated evaluation, out-of-distribution tracking, and audit logging",
+                "description": f"Continuously monitors real-time {metric} metrics, logs input drift telemetry, and alerts on degradation."
             }
         ],
         "recommended_technologies": [
@@ -193,28 +200,28 @@ def generate_deterministic_architecture(
             }
         ],
         "data_flow": [
-            "1. Raw telemetry and benchmark data are ingested and partitioned across worker nodes.",
-            "2. Nodes compute local parameter updates using parameter-efficient fine-tuning (LoRA / QLoRA).",
-            "3. Local gradients are compressed using top-k sparsification and broadcast via asynchronous gossip.",
-            "4. The aggregation gateway updates global model weights with buffered staleness compensation.",
-            "5. The updated checkpoint is validated against continuous benchmarking suites and dispatched for inference."
+            f"1. Ingestion: Raw input streams and multimodal assets are ingested, validated, and normalized by the API gateway.",
+            f"2. Preprocessing: Feature transforms and tokenization are applied according to {dom} benchmark specifications.",
+            f"3. Core Inference: The {algo} engine computes latent embeddings and classification logits with fp16 acceleration.",
+            f"4. Calibration: Decision thresholds are dynamically calibrated to ensure optimal {metric} and minimize false alarms.",
+            f"5. Telemetry & Audit: Predictions, explanation metadata, and latency telemetry are stored for continuous drift auditing."
         ],
         "model_recommendations": [
             {
-                "model_type": "Modular Transformer / Backbone Architecture",
-                "architecture": "Pretrained foundation backbone with rank-16 Low-Rank Adapters (LoRA)",
-                "loss_function": "Cross-Entropy with Proximal Regularization Term (mu = 0.01) for stability"
+                "model_type": f"Modular {algo} Backbone Architecture",
+                "architecture": f"Pretrained foundation backbone with rank-16 Low-Rank Adapters (LoRA) optimized for {clean_top}",
+                "loss_function": "Cross-Entropy with Focal Loss weighting to combat class imbalance"
             }
         ],
         "implementation_considerations": [
             "Use bfloat16 mixed precision to avoid gradient underflow while saving half of memory bandwidth.",
-            "Implement heartbeat monitoring on distributed nodes to detect stragglers early.",
+            f"Implement dynamic batching on the {algo} inference service to absorb traffic spikes.",
             "Maintain versioned checkpoint snapshots in object storage (S3 / MinIO) for reproducible rollback."
         ],
         "expected_challenges": [
-            "Balancing gradient compression ratio against numerical convergence stability.",
-            "Managing asynchronous staleness when network latency variance across clients is high.",
-            "Ensuring cross-platform numerical consistency across heterogeneous edge accelerator kernels."
+            f"Minimizing tail latency during high-concurrency peak ingestion spikes in {clean_top}.",
+            f"Handling out-of-distribution inputs and subtle edge cases without manual re-annotation in {dom}.",
+            f"Maintaining low false-positive rates without sacrificing overall {metric} sensitivity."
         ]
     }
 

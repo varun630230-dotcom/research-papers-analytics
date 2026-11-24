@@ -19,6 +19,7 @@ from typing import Dict, Any, List, Optional
 from config import config
 from services.gemini_client import call_gemini_json, GeminiError
 from utils.text_cleaner import clean_text
+from utils.topic_context import extract_literature_context
 
 logger = logging.getLogger("researchgap.ai_reviewer")
 logging.basicConfig(level=logging.INFO)
@@ -155,20 +156,27 @@ def generate_deterministic_review(
     domain: str,
     results: Dict[str, Any]
 ) -> Dict[str, Any]:
-    """Generates an evidence-grounded review evaluation when GEMINI_API_KEY is not configured."""
+    """Generates an evidence-grounded review evaluation tailored to the topic and domain."""
+    ctx = extract_literature_context(topic=topic, domain=domain)
+    clean_top = ctx["topic"]
+    dom = ctx["domain"]
+    algo = ctx["algorithms"][0]
+    dataset = ctx["datasets"][0] if ctx["datasets"] else "domain benchmark corpora"
+    metric = ctx["metrics"][0]
+    
     gaps = results.get("research_gaps", [])
-    top_gap_title = gaps[0].get("title") if gaps else "Stated Research Limitations"
+    top_gap_title = gaps[0].get("title") if gaps else f"Methodological Rigor and Scalability in {clean_top}"
     
     return {
         "overall_score": 8.4,
         "review_summary": (
-            f"The research intelligence report on '{topic}' exhibits cohesive alignment between discovered "
-            f"literature limitations and the proposed system architecture. The 8-phase execution plan provides a realistic "
-            f"timeline, though long-term distribution drift and edge hardware profiling warrant deeper ablation."
+            f"The research intelligence report on '{clean_top}' exhibits cohesive alignment between discovered "
+            f"literature limitations in {dom} and the proposed system architecture. The 8-phase execution plan provides a realistic "
+            f"timeline, though long-term distribution drift and operational deployment profiling warrant deeper ablation."
         ),
         "logical_consistency": {
             "rating": "Strong",
-            "critique": f"The proposed system architecture directly targets '{top_gap_title}' by decoupling gradient synchronization and utilizing parameter-efficient adaptation."
+            "critique": f"The proposed system architecture directly targets '{top_gap_title}' by decoupling feature ingestion and utilizing modular {algo} adaptation."
         },
         "evidence_quality": {
             "rating": "Strong",
@@ -176,24 +184,24 @@ def generate_deterministic_review(
         },
         "technical_feasibility": {
             "rating": "High",
-            "critique": "The recommended toolchain (PyTorch 2.x, FlashAttention-2, ONNX Runtime) relies on mature, battle-tested open-source libraries rather than theoretical hardware."
+            "critique": f"The recommended toolchain (PyTorch 2.x, FlashAttention-2, ONNX Runtime) relies on mature, battle-tested open-source libraries suited for {dom}."
         },
         "missing_research_areas": [
-            "Lack of formal privacy loss accounting (e.g. Rényi Differential Privacy) if deployed on sensitive multi-center data.",
-            "Absence of catastrophic failure analysis during prolonged communication network partitions.",
-            "Regulatory compliance and certification requirements under real-world domain standards."
+            f"Adversarial robustness and vulnerability stress testing under perturbed input distributions in {clean_top}.",
+            f"Systematic evaluation of demographic and cross-platform annotation bias on {dataset}.",
+            f"Longitudinal performance degradation tracking and calibration drift under real-world shifts in {dom}."
         ],
         "unsupported_assumptions": [
-            "Assuming client network bandwidth will support asynchronous gradient streams without local buffer overflow.",
-            "Assuming downstream task accuracy remains completely invariant under 8-bit integer quantization."
+            f"Assuming that {algo} representations remain completely invariant when exposed to out-of-distribution instances.",
+            f"Assuming inference latency will strictly adhere to real-time service-level objectives without quantization accuracy loss."
         ],
         "weak_recommendations": [
-            "Recommendation to 'develop continuous benchmark suites' should specify exact drift detection statistical tests (e.g. KS-test or MMD)."
+            f"Recommendation to 'develop continuous benchmark suites' should specify exact statistical drift tests (e.g., KS-test, MMD, or PSI)."
         ],
         "improvement_suggestions": [
-            "Incorporate automated differential privacy accounting into the communication gateway to guarantee formal privacy bounds.",
-            "Add a dedicated hardware-in-the-loop (HIL) stress test milestone in Phase 7 to measure thermal throttling on physical edge devices.",
-            "Establish baseline comparisons against at least two non-distributed centralized architectures to quantify the exact distributed scaling overhead."
+            f"Incorporate automated confidence calibration into the decision service to reduce false alarms in {clean_top}.",
+            f"Add dedicated out-of-distribution stress test milestones in Phase 6 to measure worst-case {metric} degradation across diverse demographics.",
+            f"Establish empirical baseline comparisons against at least two established domain architectures to rigorously quantify the performance gain of {algo}."
         ],
         "is_mock": True,
         "notice": "Generated via rule-based heuristics because GEMINI_API_KEY is not configured or rate limited."

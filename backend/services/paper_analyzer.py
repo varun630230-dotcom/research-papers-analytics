@@ -153,45 +153,73 @@ def generate_deterministic_analysis(paper: Dict[str, Any]) -> Dict[str, Any]:
     algo_keywords = [
         "FedAvg", "Differential Privacy", "PPO", "DPO", "Transformer", 
         "Graph Neural Network", "Convolutional", "SGD", "Adam", "BERT",
-        "LSTM", "Reinforcement Learning", "Deep Learning", "K-Means",
-        "Attention", "Backpropagation", "Gradient Descent", "Random Forest"
+        "LSTM", "BiLSTM", "Reinforcement Learning", "Deep Learning", "K-Means",
+        "Attention", "Backpropagation", "Gradient Descent", "Random Forest",
+        "RoBERTa", "DeBERTa", "LLaMA", "GPT", "T5", "CLIP", "ViT", "Vision Transformer",
+        "AutoML", "XGBoost", "SVM", "Naive Bayes", "Contrastive Learning", "Diffusion Model",
+        "TF-IDF", "Word2Vec", "Cross-Attention", "Dual-Stream", "Late Fusion", "Early Fusion"
     ]
     detected_algos = [kw for kw in algo_keywords if kw.lower() in (title + " " + abstract).lower()]
     
     # Extract candidate technologies
     tech_keywords = [
         "PyTorch", "TensorFlow", "CUDA", "GPU", "FastAPI", "Docker",
-        "Kubernetes", "Linux", "Hugging Face", "Scikit-Learn", "Python"
+        "Kubernetes", "Linux", "Hugging Face", "Scikit-Learn", "Python",
+        "spaCy", "NLTK", "OpenCV", "vLLM", "ONNX"
     ]
     detected_tech = [kw for kw in tech_keywords if kw.lower() in (title + " " + abstract).lower()]
     
     # Extract candidate datasets
     dataset_keywords = [
         "MIMIC", "ImageNet", "MNIST", "CIFAR", "Common Crawl", "Wikipedia",
-        "PubMed", "EHR", "Clinical", "GLUE", "SQuAD"
+        "PubMed", "EHR", "Clinical", "GLUE", "SQuAD", "Twitter", "Reddit",
+        "Instagram", "Weibo", "TikTok", "YouTube", "Facebook", "Kaggle",
+        "PolitiFact", "LIAR", "OffensEval", "MMHS150K", "HASOC", "HateXplain", "COCO", "Shakespeare"
     ]
     detected_datasets = [kw for kw in dataset_keywords if kw.lower() in (title + " " + abstract).lower()]
-    
+
+    # Extract dynamic problem statement from abstract
+    sentences = [s.strip() for s in abstract.split(".") if len(s.strip()) > 15]
+    problem_stmt = f"Addressing core challenges in: {title}"
+    for s in sentences:
+        s_lower = s.lower()
+        if any(w in s_lower for w in ["faces challenges", "problem of", "tackle", "addresses", "focuses on", "aims to", "investigates", "difficulty"]):
+            problem_stmt = s + "."
+            break
+    if problem_stmt.startswith("Addressing core challenges") and sentences:
+        problem_stmt = sentences[0] + "."
+
+    # Extract dynamic findings from abstract
+    findings_stmt = f"Demonstrated empirical performance and validation for {title}."
+    for s in sentences:
+        s_lower = s.lower()
+        if any(w in s_lower for w in ["results show", "we observe", "demonstrates", "achieves", "outperforms", "improves", "indicates", "we find"]):
+            findings_stmt = s + "."
+            break
+            
+    chosen_algo = detected_algos[0] if detected_algos else "empirical modeling"
+    chosen_dataset = detected_datasets[0] if detected_datasets else "the evaluated corpus"
+
     return {
         "paper_title": title,
-        "research_problem": f"Addressing challenges related to: {title}",
-        "research_objectives": [f"Investigate methodologies in {title}"],
-        "methodology": "Empirical and theoretical analysis as detailed in the publication text.",
+        "research_problem": problem_stmt,
+        "research_objectives": [f"Investigate methodologies and evaluate algorithmic behavior for {title}"],
+        "methodology": f"Empirical evaluation based on {chosen_algo} validated on {chosen_dataset}.",
         "algorithms": detected_algos if detected_algos else ["Domain-specific algorithms described in paper"],
         "technologies": detected_tech if detected_tech else ["Standard deep learning and scientific computing environments"],
         "datasets": detected_datasets if detected_datasets else ["Proprietary or domain-specific benchmark datasets"],
-        "experimental_findings": [f"Demonstrated empirical performance and validation for {title}."],
+        "experimental_findings": [findings_stmt],
         "limitations": [
-            "Evaluation may be constrained by specific benchmark dataset characteristics.",
-            "Potential scalability or compute overhead under resource-constrained settings."
+            f"Evaluation may be constrained by specific {chosen_dataset} distribution characteristics.",
+            f"Computational latency or resource demands when scaling {chosen_algo} to real-time workloads."
         ],
         "future_work": [
-            "Extending validation across more diverse, heterogeneous environments.",
-            "Optimizing computational efficiency and privacy guarantees."
+            f"Extending validation across more diverse, heterogeneous {chosen_dataset} environments.",
+            f"Optimizing efficiency and robustness of {chosen_algo} for production settings."
         ],
         "contributions": [
             f"Provides systematic findings on {title}.",
-            "Presents empirical results informing future research directions."
+            f"Presents empirical results informing future research on {chosen_algo}."
         ],
         "is_mock": not bool(config.get("GEMINI_API_KEY", "").strip()),
         "notice": (

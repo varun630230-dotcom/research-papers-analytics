@@ -31,14 +31,14 @@ class GeminiConfigError(GeminiError):
     pass
 
 
-_QUOTA_EXHAUSTED = False
+_QUOTA_EXHAUSTED_UNTIL = 0.0
 _QUOTA_ERROR_MSG = ""
 
 
 def is_gemini_quota_exhausted() -> bool:
-    """Returns True if the Google Gemini API has signaled quota exhaustion."""
-    global _QUOTA_EXHAUSTED
-    return _QUOTA_EXHAUSTED
+    """Returns True if the Google Gemini API has signaled quota exhaustion within cooldown window."""
+    global _QUOTA_EXHAUSTED_UNTIL
+    return time.time() < _QUOTA_EXHAUSTED_UNTIL
 
 
 def call_gemini(
@@ -61,10 +61,10 @@ def call_gemini(
     Returns:
         Raw text response from the model (or JSON string if json_mode=True)
     """
-    global _QUOTA_EXHAUSTED, _QUOTA_ERROR_MSG
+    global _QUOTA_EXHAUSTED_UNTIL, _QUOTA_ERROR_MSG
     
-    if _QUOTA_EXHAUSTED:
-        raise GeminiError(_QUOTA_ERROR_MSG or "Google Gemini free-tier daily quota exhausted (HTTP 429).")
+    if is_gemini_quota_exhausted():
+        raise GeminiError(_QUOTA_ERROR_MSG or "Google Gemini quota cooldown active (HTTP 429).")
 
     api_key = config.get("GEMINI_API_KEY", "").strip()
     if not api_key:
@@ -131,9 +131,9 @@ def call_gemini(
                 if response.status_code == 429:
                     err_body = response.text
                     if "RESOURCE_EXHAUSTED" in err_body or "Quota" in err_body or "quota" in err_body:
-                        _QUOTA_EXHAUSTED = True
-                        _QUOTA_ERROR_MSG = "Google Gemini daily quota exhausted (HTTP 429)."
-                        logger.warning(f"Google Gemini quota exhausted: {_QUOTA_ERROR_MSG}. Fast-failing to deterministic fallback.")
+                        _QUOTA_EXHAUSTED_UNTIL = time.time() + 60.0
+                        _QUOTA_ERROR_MSG = "Google Gemini quota rate limit active (HTTP 429). Retrying in 60s."
+                        logger.warning(f"Google Gemini rate limited: {_QUOTA_ERROR_MSG}. Fast-failing to deterministic fallback.")
                         raise GeminiError(_QUOTA_ERROR_MSG)
                     if attempt < max_retries:
                         time.sleep(2)

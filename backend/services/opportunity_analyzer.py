@@ -21,6 +21,7 @@ from typing import Dict, Any, List, Optional
 from config import config
 from services.gemini_client import call_gemini_json, GeminiError
 from utils.text_cleaner import clean_text
+from utils.topic_context import extract_literature_context
 
 logger = logging.getLogger("researchgap.opportunity_analyzer")
 logging.basicConfig(level=logging.INFO)
@@ -158,54 +159,77 @@ def generate_deterministic_opportunities(
     research_gaps: List[Dict[str, Any]],
     tech_limitations: List[Dict[str, Any]]
 ) -> List[Dict[str, Any]]:
-    """Generates rule-grounded market opportunities when GEMINI_API_KEY is not configured."""
-    gap_title = research_gaps[0].get("title") if research_gaps else "Identified Research Limitations"
+    """Generates dynamic, domain-specific market opportunities derived from research gaps."""
+    ctx = extract_literature_context(topic=topic, domain=domain)
+    clean_top = ctx["topic"]
+    dom = ctx["domain"]
+    algo = ctx["algorithms"][0]
+    metric = ctx["metrics"][0]
     
+    gap_title = research_gaps[0].get("title") if research_gaps else f"Methodological Rigor and Contextual Ambiguity in {clean_top}"
+    sec_gap = research_gaps[1].get("title") if len(research_gaps) > 1 else f"Dataset Scarcity and Evaluation Bias in {clean_top}"
+    
+    # Customise product personas based on domain
+    if any(k in dom.lower() for k in ["language", "nlp", "text", "multimodal", "social"]):
+        opp1_title = f"Real-Time Automated Intelligence & Moderation API for {clean_top}"
+        opp1_users = "Trust & Safety Teams, Community Managers, Social Platforms, and EdTech Administrators"
+        opp1_prob = f"Current platforms rely on slow, manual reviews or rigid keyword blocklists that fail on nuanced {clean_top} contexts."
+        opp1_sol = f"A low-latency REST/gRPC API with fine-tuned {algo} backbones delivering explainable confidence scores and multi-label severity categorization."
+        opp1_apps = ["Live stream and chat room automated moderation", "School and workplace digital safety monitoring", "Social media brand reputation management"]
+    elif any(k in dom.lower() for k in ["health", "medical", "clinical"]):
+        opp1_title = f"Clinical Decision Support & Risk Stratification Suite for {clean_top}"
+        opp1_users = "Clinical Informaticians, Hospital Physicians, Diagnostic Centers, and Healthcare Startups"
+        opp1_prob = f"Clinicians lack automated tools to detect early biomarkers and subtle pathological signals in {clean_top} without high false-alarm rates."
+        opp1_sol = f"An integrated software platform utilizing {algo} with calibrated confidence bounds and HL7/FHIR EHR interoperability."
+        opp1_apps = ["Point-of-care patient risk assessment", "Automated diagnostic triage in intensive care", "Clinical trial cohort screening"]
+    else:
+        opp1_title = f"Turnkey Optimization & Acceleration SDK for {clean_top}"
+        opp1_users = "Enterprise AI Engineers, Systems Architects, and ML Application Developers"
+        opp1_prob = f"Teams struggle with compute bottlenecks and high infrastructure bills when deploying {algo} in production environments."
+        opp1_sol = f"A drop-in Python/C++ acceleration library providing memory-efficient execution and automated mixed-precision pipelining."
+        opp1_apps = ["Cloud-based training pipeline acceleration", "Enterprise internal model customization", "High-throughput inference deployment"]
+
     return [
         {
-            "title": f"Turnkey Optimization & Acceleration SDK for {topic}",
-            "description": f"A developer-first software development kit that automates parameter-efficient fine-tuning, memory optimization, and quantization for {domain or topic}.",
-            "target_users": "Enterprise AI Engineers, Data Science Teams, and ML Application Developers",
-            "existing_problem": "Teams struggle with memory saturation and high compute bills when adapting large models to production environments.",
-            "proposed_solution": "A plug-and-play Python library with native FlashAttention-2, QLoRA, and automatic mixed-precision defaults.",
+            "title": opp1_title,
+            "description": f"A specialized software solution addressing practical operational challenges in {clean_top}.",
+            "target_users": opp1_users,
+            "existing_problem": opp1_prob,
+            "proposed_solution": opp1_sol,
             "practical_feasibility": "High",
-            "potential_applications": [
-                "Cloud-based training pipeline acceleration",
-                "Self-hosted internal enterprise model customization",
-                "Cost reduction for high-throughput inference APIs"
-            ],
+            "potential_applications": opp1_apps,
             "evidence_basis": "research_grounded",
             "supporting_gap_or_paper": gap_title
         },
         {
-            "title": f"Benchmarking & Drift Monitoring Platform for {topic}",
-            "description": f"An automated validation suite that stress-tests models against realistic synthetic noise, data drift, and out-of-distribution shifts before deployment.",
-            "target_users": "Quality Assurance Engineers, MLOps Professionals, Compliance Officers",
-            "existing_problem": "Models evaluated only on clean static benchmarks suffer from unmonitored performance drops after deployment in the wild.",
-            "proposed_solution": "A CI/CD testing platform that generates continuous synthetic edge cases and evaluates distribution robustness.",
+            "title": f"Continuous Robustness & Benchmark Auditing Platform for {clean_top}",
+            "description": f"An automated verification harness that stress-tests models against realistic data drift, adversarial perturbations, and demographic shift in {dom}.",
+            "target_users": "Quality Assurance Engineers, MLOps Professionals, and AI Compliance Officers",
+            "existing_problem": f"Models validated only on static benchmarks suffer from unmonitored performance drops ({metric} degradation) after live deployment.",
+            "proposed_solution": "A CI/CD testing platform that generates continuous synthetic edge cases and monitors real-world calibration stability.",
             "practical_feasibility": "High",
             "potential_applications": [
                 "Pre-deployment safety and compliance certification",
                 "Automated continuous evaluation in CI/CD pipelines",
-                "Cross-organization benchmark comparisons"
+                "Cross-model benchmark comparisons and audit reports"
             ],
             "evidence_basis": "research_grounded",
-            "supporting_gap_or_paper": "Dataset Scarcity and Evaluation Over-Reliance on Synthetic Benchmarks"
+            "supporting_gap_or_paper": sec_gap
         },
         {
-            "title": f"Specialized Edge Inference Gateway for {domain or 'Edge AI'}",
-            "description": f"An ultra-low-power runtime engine and hardware bridge designed to execute {topic} algorithms directly on embedded devices.",
-            "target_users": "IoT System Developers, Embedded Systems Engineers, Robotics Manufacturers",
-            "existing_problem": "High-end server architectures cannot run directly on constrained microcontrollers and mobile edge accelerators.",
-            "proposed_solution": "A hardware-agnostic C++ inference engine with 4-bit integer quantization and zero external cloud dependencies.",
+            "title": f"High-Throughput Low-Latency Edge Inference Gateway for {dom}",
+            "description": f"An ultra-low-power runtime engine and hardware bridge designed to execute {clean_top} algorithms on resource-constrained devices.",
+            "target_users": "Embedded Systems Developers, IoT Product Engineers, and Platform Architects",
+            "existing_problem": "High-capacity server architectures cannot execute directly on constrained endpoint devices without network roundtrips.",
+            "proposed_solution": "A hardware-agnostic C++ inference engine with INT8 quantization, zero external dependencies, and streaming telemetry.",
             "practical_feasibility": "Medium",
             "potential_applications": [
-                "Autonomous robotics and drone navigation",
-                "Wearable medical monitoring and point-of-care devices",
-                "Industrial IoT sensory anomaly detection"
+                f"On-device edge analytics for {clean_top}",
+                "Air-gapped and offline sensitive data processing",
+                "Sub-50ms local processing for interactive applications"
             ],
             "evidence_basis": "extrapolated_assumption",
-            "supporting_gap_or_paper": "Contextual & Practical Integration: Edge Hardware Constraints"
+            "supporting_gap_or_paper": "Contextual & Practical Integration: Real-World Operational Constraints"
         }
     ]
 
