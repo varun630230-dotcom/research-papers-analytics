@@ -31,12 +31,22 @@ class GeminiConfigError(GeminiError):
     pass
 
 
+_QUOTA_EXHAUSTED = False
+_QUOTA_ERROR_MSG = ""
+
+
+def is_gemini_quota_exhausted() -> bool:
+    """Returns True if the Google Gemini API has signaled quota exhaustion."""
+    global _QUOTA_EXHAUSTED
+    return _QUOTA_EXHAUSTED
+
+
 def call_gemini(
     prompt: str,
     system_instruction: Optional[str] = None,
     json_mode: bool = True,
     temperature: float = 0.2,
-    max_retries: int = 2
+    max_retries: int = 1
 ) -> str:
     """
     Sends a generation request directly to the Google Gemini API.
@@ -51,6 +61,11 @@ def call_gemini(
     Returns:
         Raw text response from the model (or JSON string if json_mode=True)
     """
+    global _QUOTA_EXHAUSTED, _QUOTA_ERROR_MSG
+    
+    if _QUOTA_EXHAUSTED:
+        raise GeminiError(_QUOTA_ERROR_MSG or "Google Gemini free-tier daily quota exhausted (HTTP 429).")
+
     api_key = config.get("GEMINI_API_KEY", "").strip()
     if not api_key:
         raise GeminiConfigError(
@@ -59,10 +74,8 @@ def call_gemini(
             "and add GEMINI_API_KEY=your_key to your .env file."
         )
         
-    model = config.get("GEMINI_MODEL", "gemini-2.0-flash")
+    model = config.get("GEMINI_MODEL", "gemini-flash-lite-latest")
     base_url = config.get("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta")
-    endpoint = f"{base_url}/models/{model}:generateContent"
-    
     params = {"key": api_key}
     
     # Construct generation config
@@ -94,57 +107,84 @@ def call_gemini(
         "User-Agent": "ResearchGapAI/1.0",
     }
     
-    # Execute request with exponential backoff on transient errors
-    for attempt in range(max_retries + 1):
-        try:
-            logger.info(f"Calling Gemini model '{model}' (attempt {attempt + 1}/{max_retries + 1})...")
-            response = requests.post(
-                endpoint,
-                params=params,
-                json=payload,
-                headers=headers,
-                timeout=config.get("API_TIMEOUT", 30)
-            )
+    candidate_models = [model]
+    for alt in ["gemini-flash-lite-latest", "gemini-flash-latest"]:
+        if alt not in candidate_models:
+            candidate_models.append(alt)
             
-            # Handle rate limiting (429) or transient server errors (500, 503)
-            if response.status_code in [429, 500, 503]:
-                if attempt < max_retries:
-                    wait_time = (2 ** attempt) * 2  # 2s, 4s
-                    logger.warning(f"Gemini returned HTTP {response.status_code}. Retrying in {wait_time}s...")
-                    time.sleep(wait_time)
-                    continue
-                else:
-                    raise GeminiError(
-                        f"Gemini API rate limit or server error (HTTP {response.status_code}): {response.text}"
-                    )
-                    
-            if response.status_code != 200:
-                raise GeminiError(
-                    f"Gemini API request failed with HTTP {response.status_code}: {response.text}"
+    last_error = None
+    
+    for current_model in candidate_models:
+        endpoint = f"{base_url}/models/{current_model}:generateContent"
+        for attempt in range(max_retries + 1):
+            try:
+                logger.info(f"Calling Gemini model '{current_model}' (attempt {attempt + 1}/{max_retries + 1})...")
+                response = requests.post(
+                    endpoint,
+                    params=params,
+                    json=payload,
+                    headers=headers,
+                    timeout=config.get("API_TIMEOUT", 15)
                 )
                 
-            data = response.json()
-            candidates = data.get("candidates", [])
-            if not candidates:
-                raise GeminiError("Gemini returned no candidates in response.")
+                # Check for quota exhaustion (429 RESOURCE_EXHAUSTED)
+                if response.status_code == 429:
+                    err_body = response.text
+                    if "RESOURCE_EXHAUSTED" in err_body or "Quota" in err_body or "quota" in err_body:
+                        _QUOTA_EXHAUSTED = True
+                        _QUOTA_ERROR_MSG = "Google Gemini daily quota exhausted (HTTP 429)."
+                        logger.warning(f"Google Gemini quota exhausted: {_QUOTA_ERROR_MSG}. Fast-failing to deterministic fallback.")
+                        raise GeminiError(_QUOTA_ERROR_MSG)
+                    if attempt < max_retries:
+                        time.sleep(2)
+                        continue
+                    else:
+                        last_error = f"HTTP 429: {response.text}"
+                        break
+                        
+                # Handle transient 500, 503 (server overloaded)
+                if response.status_code in [500, 503]:
+                    if attempt < max_retries:
+                        logger.warning(f"Gemini model '{current_model}' returned HTTP {response.status_code}. Retrying in 1s...")
+                        time.sleep(1)
+                        continue
+                    else:
+                        logger.warning(f"Gemini model '{current_model}' exhausted retries with HTTP {response.status_code}. Trying next model...")
+                        last_error = f"HTTP {response.status_code}: {response.text}"
+                        break
+                        
+                if response.status_code != 200:
+                    last_error = f"HTTP {response.status_code}: {response.text}"
+                    break
+                    
+                data = response.json()
+                candidates = data.get("candidates", [])
+                if not candidates:
+                    last_error = "Gemini returned no candidates in response."
+                    break
+                    
+                first_candidate = candidates[0]
+                content = first_candidate.get("content", {})
+                parts = content.get("parts", [])
                 
-            first_candidate = candidates[0]
-            content = first_candidate.get("content", {})
-            parts = content.get("parts", [])
-            
-            if not parts or "text" not in parts[0]:
-                raise GeminiError("Gemini returned empty text content.")
+                if not parts or "text" not in parts[0]:
+                    last_error = "Gemini returned empty text content."
+                    break
+                    
+                return parts[0]["text"]
                 
-            return parts[0]["text"]
-            
-        except requests.exceptions.Timeout:
-            if attempt < max_retries:
-                logger.warning("Gemini request timed out. Retrying...")
-                time.sleep(2)
-                continue
-            raise GeminiError("Gemini API request timed out after multiple attempts.")
-        except requests.exceptions.RequestException as e:
-            raise GeminiError(f"Network error communicating with Gemini API: {str(e)}")
+            except requests.exceptions.Timeout:
+                if attempt < max_retries:
+                    logger.warning(f"Gemini model '{current_model}' timed out. Retrying...")
+                    time.sleep(1)
+                    continue
+                last_error = "Request timed out."
+                break
+            except requests.exceptions.RequestException as e:
+                last_error = f"Network error: {str(e)}"
+                break
+                
+    raise GeminiError(f"All Gemini models exhausted. Last error: {last_error}")
 
 
 def call_gemini_json(

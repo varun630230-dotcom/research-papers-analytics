@@ -244,14 +244,18 @@ async def start_analysis(request: ResearchRequest):
         objectives=request.objectives,
     )
     
-    pipeline_stats = run_paper_pipeline(
-        project_id=project_id,
-        topic=request.topic,
-        description=request.description,
-        keywords=request.keywords,
-        domain=request.domain,
-        objectives=request.objectives,
-    )
+    try:
+        pipeline_stats = run_paper_pipeline(
+            project_id=project_id,
+            topic=request.topic,
+            description=request.description,
+            keywords=request.keywords,
+            domain=request.domain,
+            objectives=request.objectives,
+        )
+    except Exception as e:
+        logger.error(f"start_analysis error for project #{project_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Research pipeline error: {str(e)}")
     
     project = db.get_project(project_id)
     papers = db.get_papers(project_id)

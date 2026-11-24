@@ -28,6 +28,7 @@ from datetime import datetime
 # Import our modules
 from config import config, validate_config
 import database as db
+from services.gemini_client import is_gemini_quota_exhausted
 
 # Import route handlers
 from routes.research import router as research_router
@@ -120,6 +121,7 @@ async def health_check():
         "version": "1.0.0",
         "database": "connected",
         "gemini_configured": len(config["GEMINI_API_KEY"]) > 0,
+        "gemini_quota_exhausted": is_gemini_quota_exhausted(),
         "config_issues": config_issues,
         "timestamp": datetime.now().isoformat(),
     }

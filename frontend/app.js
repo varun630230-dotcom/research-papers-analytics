@@ -104,9 +104,12 @@ async function checkApiHealth() {
         const data = await response.json();
 
         if (data.status === "healthy") {
-            if (data.gemini_configured) {
+            if (data.gemini_configured && !data.gemini_quota_exhausted) {
                 dot.className = "status-dot online";
                 text.textContent = "API & Gemini Connected";
+            } else if (data.gemini_configured && data.gemini_quota_exhausted) {
+                dot.className = "status-dot warning";
+                text.textContent = "Gemini Quota Exceeded (Heuristic Mode)";
             } else {
                 dot.className = "status-dot warning";
                 text.textContent = "API OK (Heuristic Mode)";
@@ -208,8 +211,14 @@ async function submitResearch(event) {
         clearInterval(progressInterval);
 
         if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.detail || "Analysis failed");
+            let errorMsg = "Analysis failed";
+            try {
+                const err = await response.json();
+                errorMsg = err.detail || errorMsg;
+            } catch (_) {
+                errorMsg = (await response.text()) || errorMsg;
+            }
+            throw new Error(errorMsg);
         }
 
         const result = await response.json();

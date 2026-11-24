@@ -26,7 +26,7 @@ import logging
 from typing import Dict, Any, List, Optional
 
 from config import config
-from services.gemini_client import call_gemini_json, GeminiConfigError
+from services.gemini_client import call_gemini_json, GeminiError, GeminiConfigError
 from utils.text_cleaner import clean_text
 
 logger = logging.getLogger("researchgap.paper_analyzer")
@@ -193,8 +193,12 @@ def generate_deterministic_analysis(paper: Dict[str, Any]) -> Dict[str, Any]:
             f"Provides systematic findings on {title}.",
             "Presents empirical results informing future research directions."
         ],
-        "is_mock": True,
-        "notice": "Generated via rule-based heuristics because GEMINI_API_KEY is not set in .env."
+        "is_mock": not bool(config.get("GEMINI_API_KEY", "").strip()),
+        "notice": (
+            "Extracted via evidence-grounded paper text heuristics."
+            if bool(config.get("GEMINI_API_KEY", "").strip()) else
+            "Generated via rule-based heuristics because GEMINI_API_KEY is not set in .env."
+        )
     }
 
 

@@ -196,7 +196,7 @@ def generate_deterministic_review(
             "Establish baseline comparisons against at least two non-distributed centralized architectures to quantify the exact distributed scaling overhead."
         ],
         "is_mock": True,
-        "notice": "Generated via rule-based heuristics because GEMINI_API_KEY is not configured."
+        "notice": "Generated via rule-based heuristics because GEMINI_API_KEY is not configured or rate limited."
     }
 
 

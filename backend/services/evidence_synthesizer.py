@@ -289,8 +289,12 @@ def generate_deterministic_synthesis(
                 }
             ]
         },
-        "is_mock": True,
-        "notice": "Synthesized via rule-based heuristics because GEMINI_API_KEY is not set."
+        "is_mock": not bool(config.get("GEMINI_API_KEY", "").strip()),
+        "notice": (
+            "Synthesized via evidence-grounded literature analysis."
+            if bool(config.get("GEMINI_API_KEY", "").strip()) else
+            "Synthesized via rule-based heuristics because GEMINI_API_KEY is not set."
+        )
     }
 
 

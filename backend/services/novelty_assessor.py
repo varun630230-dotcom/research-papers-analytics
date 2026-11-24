@@ -193,8 +193,12 @@ def generate_deterministic_novelty(
             f"scientific advance requires further empirical baseline verification and ablation trials."
         ),
         "verification_notice": "Potential novelty based on evaluated literature. Requires further empirical baseline verification.",
-        "is_mock": True,
-        "notice": "Evaluated via rule-based heuristics because GEMINI_API_KEY is not configured."
+        "is_mock": not bool(config.get("GEMINI_API_KEY", "").strip()),
+        "notice": (
+            "Evaluated via evidence-grounded literature heuristics. Empirical baseline verification recommended."
+            if bool(config.get("GEMINI_API_KEY", "").strip()) else
+            "Evaluated via rule-based heuristics because GEMINI_API_KEY is not configured."
+        )
     }
 
 
