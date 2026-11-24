@@ -13,9 +13,16 @@ Why a simple dictionary instead of a Settings class?
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-# The .env file should be in the project root (one level above backend/)
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
+# Load environment variables from .env file (checks root, backend/, or cwd)
+root_env = os.path.join(os.path.dirname(__file__), "..", ".env")
+backend_env = os.path.join(os.path.dirname(__file__), ".env")
+
+if os.path.exists(root_env):
+    load_dotenv(dotenv_path=root_env)
+elif os.path.exists(backend_env):
+    load_dotenv(dotenv_path=backend_env)
+else:
+    load_dotenv()
 
 
 def get_config():
