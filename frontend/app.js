@@ -864,7 +864,15 @@ function updateNovelty(novelty) {
                     <div class="gap-section-block">
                         <strong>Similar Existing Approaches:</strong>
                         <ul style="margin-left: 16px; margin-top: 6px;">
-                            ${similar.map(s => `<li>${escapeHtml(s)}</li>`).join("")}
+                            ${similar.map(s => {
+                                if (typeof s === 'object' && s !== null) {
+                                    const approachName = s.approach || s.title || s.name || "Baseline Study";
+                                    const cited = s.cited_paper ? ` (Cited in: <em>${escapeHtml(s.cited_paper)}</em>)` : "";
+                                    const overlap = s.overlap_description ? ` — ${escapeHtml(s.overlap_description)}` : "";
+                                    return `<li><strong>${escapeHtml(approachName)}</strong>${cited}${overlap}</li>`;
+                                }
+                                return `<li>${escapeHtml(s)}</li>`;
+                            }).join("")}
                         </ul>
                     </div>
 

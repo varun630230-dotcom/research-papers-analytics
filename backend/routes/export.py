@@ -262,7 +262,13 @@ async def export_markdown(project_id: int):
         if novelty.get("similar_existing_approaches"):
             lines.append("### Similar Existing Approaches in Evaluated Literature:")
             for s in novelty["similar_existing_approaches"]:
-                lines.append(f"- {s}")
+                if isinstance(s, dict):
+                    appr = s.get("approach", s.get("title", "Baseline Study"))
+                    cited = f" (Cited: {s['cited_paper']})" if s.get("cited_paper") else ""
+                    desc = f" — {s['overlap_description']}" if s.get("overlap_description") else ""
+                    lines.append(f"- **{appr}**{cited}{desc}")
+                else:
+                    lines.append(f"- {s}")
             lines.append("")
         if novelty.get("unexplored_combinations"):
             lines.append("### Unexplored Methodological Combinations:")
