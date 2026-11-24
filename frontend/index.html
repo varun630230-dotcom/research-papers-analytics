@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResearchGap AI — Research Intelligence Platform</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- Chart.js from CDN for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- ================================================================== -->
+    <!-- SIDEBAR NAVIGATION                                                  -->
+    <!-- ================================================================== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1 class="logo">
+                <span class="logo-icon">🔬</span>
+                <span class="logo-text">ResearchGap AI</span>
+            </h1>
+            <p class="logo-subtitle">Research Intelligence Platform</p>
+        </div>
+
+        <nav class="sidebar-nav">
+            <button class="nav-btn active" data-section="input" onclick="showSection('input')">
+                <span class="nav-icon">📝</span>
+                <span>New Analysis</span>
+            </button>
+            <button class="nav-btn" data-section="dashboard" onclick="showSection('dashboard')">
+                <span class="nav-icon">📊</span>
+                <span>Dashboard</span>
+            </button>
+            <button class="nav-btn" data-section="papers" onclick="showSection('papers')">
+                <span class="nav-icon">📄</span>
+                <span>Papers & PDFs</span>
+            </button>
+            <button class="nav-btn" data-section="synthesis" onclick="showSection('synthesis')">
+                <span class="nav-icon">🧬</span>
+                <span>Evidence Synthesis</span>
+            </button>
+            <button class="nav-btn" data-section="gaps" onclick="showSection('gaps')">
+                <span class="nav-icon">🔍</span>
+                <span>Research Gaps</span>
+            </button>
+            <button class="nav-btn" data-section="technology" onclick="showSection('technology')">
+                <span class="nav-icon">⚙️</span>
+                <span>Tech Limitations</span>
+            </button>
+            <button class="nav-btn" data-section="opportunities" onclick="showSection('opportunities')">
+                <span class="nav-icon">💡</span>
+                <span>Opportunities & Scores</span>
+            </button>
+            <button class="nav-btn" data-section="novelty" onclick="showSection('novelty')">
+                <span class="nav-icon">🧪</span>
+                <span>Novelty Assessment</span>
+            </button>
+            <button class="nav-btn" data-section="architecture" onclick="showSection('architecture')">
+                <span class="nav-icon">🏗️</span>
+                <span>Architecture & Roadmap</span>
+            </button>
+            <button class="nav-btn" data-section="review" onclick="showSection('review')">
+                <span class="nav-icon">🕵️</span>
+                <span>AI Peer Review</span>
+            </button>
+            <button class="nav-btn" data-section="export" onclick="showSection('export')">
+                <span class="nav-icon">📥</span>
+                <span>Export Report</span>
+            </button>
+        </nav>
+
+        <!-- Research History -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-header">
+                <h3 class="sidebar-section-title">Research History</h3>
+                <button class="history-refresh-btn" onclick="loadResearchHistory()" title="Refresh History">🔄</button>
+            </div>
+            <div id="history-list" class="history-list">
+                <p class="history-empty">No research projects yet</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ================================================================== -->
+    <!-- MAIN CONTENT AREA                                                   -->
+    <!-- ================================================================== -->
+    <main class="main-content">
+        <!-- TOP BAR -->
+        <header class="top-bar">
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+            <div class="top-bar-title">
+                <h2 id="page-title">New Research Analysis</h2>
+            </div>
+            <div class="top-bar-status" id="api-status">
+                <span class="status-dot"></span>
+                <span class="status-text">Checking...</span>
+            </div>
+        </header>
+
+        <!-- CONTENT SECTIONS -->
+        <div class="content-wrapper">
+
+            <!-- ============================================================ -->
+            <!-- SECTION: Research Input                                       -->
+            <!-- ============================================================ -->
+            <section class="section active" id="section-input">
+                <div class="input-card">
+                    <h3>Start a New Research Analysis</h3>
+                    <p class="input-description">
+                        Enter your research topic or project idea below. ResearchGap AI will
+                        discover relevant academic papers across <strong>OpenAlex, arXiv, Semantic Scholar, and Crossref</strong>,
+                        extract PDF full texts, perform cross-paper evidence synthesis, detect 7-taxonomy research gaps,
+                        analyze tech limitations, score market opportunities, design systems architectures, and generate an AI peer review audit.
+                    </p>
+
+                    <form id="research-form" onsubmit="submitResearch(event)">
+                        <div class="form-group">
+                            <label for="topic">Research Topic *</label>
+                            <input 
+                                type="text" 
+                                id="topic" 
+                                name="topic" 
+                                placeholder="e.g., Privacy-Preserving Federated Graph Learning"
+                                required
+                                minlength="3"
+                                maxlength="500"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">Detailed Description</label>
+                            <textarea 
+                                id="description" 
+                                name="description" 
+                                rows="3"
+                                placeholder="Describe your research context, motivations, or specific challenges..."
+                                maxlength="2000"
+                            ></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="domain">Research Domain</label>
+                                <input 
+                                    type="text" 
+                                    id="domain" 
+                                    name="domain" 
+                                    placeholder="e.g., Distributed Privacy & Graph Machine Learning"
+                                    maxlength="200"
+                                >
+                            </div>
+                            <div class="form-group">
+                                <label for="keywords">Target Keywords</label>
+                                <input 
+                                    type="text" 
+                                    id="keywords" 
+                                    name="keywords" 
+                                    placeholder="e.g., federated learning, differential privacy, GNN, non-IID"
+                                    maxlength="500"
+                                >
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="objectives">Research Objectives</label>
+                            <textarea 
+                                id="objectives" 
+                                name="objectives" 
+                                rows="2"
+                                placeholder="What core outcome or system architecture do you want to achieve?"
+                                maxlength="2000"
+                            ></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="submit-btn">
+                            <span class="btn-icon">🚀</span>
+                            <span>Run Autonomous Pipeline</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Progress Indicator -->
+                <div class="progress-card hidden" id="progress-card">
+                    <h3>Autonomous Pipeline in Progress</h3>
+                    <p class="text-muted" style="margin-bottom: 16px;">
+                        Executing multi-source discovery, filtering, PDF extraction, Gemini LLM analysis, synthesis, gap detection, architecture design, and critical peer review...
+                    </p>
+                    <div class="progress-steps" id="progress-steps">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- SECTION: Dashboard Overview                                   -->
+            <!-- ============================================================ -->
+            <section class="section" id="section-dashboard">
+                <!-- Topic Header -->
+                <div class="info-card wide" style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <span class="badge" id="dashboard-domain" style="margin-bottom: 8px; display: inline-block;">General Science</span>
+                            <h2 id="dashboard-topic" style="font-size: 1.4rem; font-weight: 700; color: var(--text);">No analysis loaded</h2>
+                            <p id="dashboard-description" class="text-muted" style="margin-top: 6px;">
+                                Start a new analysis or select a past study from the Research History.
+                            </p>
+                        </div>
+                        <div id="dashboard-score-pill" class="review-score-gauge hidden">
+                            <span class="score-number" id="dash-review-score">0.0</span>
+                            <span class="score-label">AI Review Score</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- 6 Stats Cards -->
+                    <div class="stat-card">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-total-papers">0</span>
+                            <span class="stat-label">Discovered Papers</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-relevant-papers">0</span>
+                            <span class="stat-label">Ranked Relevant</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📄</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-pdfs-extracted">0</span>
+                            <span class="stat-label">PDFs Extracted</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔍</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-gaps">0</span>
+                            <span class="stat-label">Research Gaps</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💡</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-opportunities">0</span>
+                            <span class="stat-label">Opportunities</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏱️</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-roadmap-weeks">0</span>
+                            <span class="stat-label">Roadmap Weeks</span>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="chart-card wide">
+                        <h3>Academic Paper Sources Distribution</h3>
+                        <div style="height: 260px; position: relative;">
+                            <canvas id="sources-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card wide">
+                        <h3>Weighted Opportunity Scores (0.0 – 10.0 Scale)</h3>
+                        <div style="height: 260px; position: relative;">
+                            <canvas id="scores-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Executive Highlights -->
+                    <div class="info-card wide" id="dashboard-highlights">
+                        <h3 style="margin-bottom: 14px;">Executive Research Highlights</h3>
+                        <div class="highlights-grid">
+                            <div class="highlight-item">
+                                <span class="highlight-label">🔬 Synthesis Takeaway</span>
+                                <p id="highlight-synthesis" class="highlight-text">No data loaded.</p>
+                            </div>
+                            <div class="highlight-item">
+                                <span class="highlight-label">🔍 Primary Research Gap</span>
+                                <p id="highlight-top-gap" class="highlight-text">No data loaded.</p>
+                            </div>
+                            <div class="highlight-item">
+                                <span class="highlight-label">💡 Top Market Opportunity</span>
+                                <p id="highlight-top-opp" class="highlight-text">No data loaded.</p>
+                            </div>
+                            <div class="highlight-item">
+                                <span class="highlight-label">🏗️ System Architecture</span>
+                                <p id="highlight-arch" class="highlight-text">No data loaded.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- SECTION: Papers & PDFs                                        -->
+            <!-- ============================================================ -->
+            <section class="section" id="section-papers">
+                <div class="section-header">
+                    <div>
+                        <h3>Discovered Academic Literature</h3>
+                        <p class="text-muted" style="font-size: 0.85rem;">Ranked by transparent keyword relevance scoring formula (0.0 to 10.0)</p>
+                    </div>
+                    <span class="badge" id="papers-count">0 papers</span>
+                </div>
+
+                <!-- Source Filter Bar -->
+                <div class="filter-bar" id="papers-filter-bar">
+                    <button class="filter-btn active" onclick="filterPapers('all')">All Sources</button>
+                    <button class="filter-btn" onclick="filterPapers('arXiv')">arXiv</button>
+                    <button class="filter-btn" onclick="filterPapers('OpenAlex')">OpenAlex</button>
+                    <button class="filter-btn" onclick="filterPapers('Crossref')">Crossref</button>
+                    <button class="filter-btn" onclick="filterPapers('Semantic Scholar')">Semantic Scholar</button>
+                </div>
+
+                <div id="papers-list" class="papers-grid">
+                    <p class="empty-state">No papers discovered yet. Start a new analysis.</p>
+                </div>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- SECTION: Evidence Synthesis                                   -->
+            <!-- ============================================================ -->
+            <section class="section" id="section-synthesis">
+                <div class="section-header">
+                    <div>
+                        <h3>Multi-Paper Evidence Synthesis</h3>
+                        <p class="text-muted" style="font-size: 0.85rem;">Cross-paper patterns, dominant methodologies, and three-tier claim classification</p>
+                    </div>
+                </div>
+                <div id="synthesis-content">
+                    <p class="empty-state">No evidence synthesis generated yet. Complete an analysis first.</p>
+                </div>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- SECTION: Research Gaps                                        -->
+            <!-- ============================================================ -->
+            <section class="section" id="section-gaps">
+                <div class="section-header">
+                    <div>
+                        <h3>Identified Research Gaps</h3>
+                        <p class="text-muted" style="font-size: 0.85rem;">Categorized across 7 taxonomy types with mandatory empirical citations</p>
+                    </div>
+                    <span class="badge" id="gaps-count">0 gaps</span>
+                </div>
+
+                <!-- Taxonomy Filter Bar -->
+                <div class="filter-bar" id="gaps-filter-bar">
+                    <button class="filter-btn active" onclick="filterGaps('all')">All Taxonomies</button>
+                    <button class="filter-btn" onclick="filterGaps('methodological')">Methodological</button>
+                    <button class="filter-btn" onclick="filterGaps('scalability')">Scalability</button>
+                    <button class="filter-btn" onclick="filterGaps('dataset')">Dataset</button>
+                    <button class="filter-btn" onclick="filterGaps('performance')">Performance</button>
+                    <button class="filter-btn" onclick="filterGaps('evaluation')">Evaluation</button>
+                    <button class="filter-btn" onclick="filterGaps('contextual')">Contextual</button>
+                    <button class="filter-btn" onclick="filterGaps('unexplored')">Unexplored</button>
+                </div>
+
+                <div id="gaps-list" class="gaps-grid">
+                    <p class="empty-state">No research gaps identified yet. Complete an analysis first.</p>
+                </div>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- SECTION: Tech Limitations                                     -->
+            <!-- ============================================================ -->
+            <section class="section" id="section-technology">
+                <div class="section-header">
+                    <div>
+                        <h3>Technological Limitations & Bottlenecks</h3>
+                        <p class="text-muted" style="font-size: 0.85rem;">Computational, memory, and infrastructure constraints with modern recommended alternatives</p>
+                    </div>
+                    <span class="badge" id="tech-count">0 limitations</span>
+                </div>
+                <div id="technology-list" class="tech-grid">
+                    <p class="empty-state">No technological limitations identified yet. Complete an analysis first.</p>
+                </div>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- SECTION: Market Opportunities & Scoring                       -->
+            <!-- ============================================================ -->
+            <section class="section" id="section-opportunities">
+                <div class="section-header">
+                    <div>
+                        <h3>Grounded Market Opportunities & Weighted Scoring</h3>
+                        <p class="text-muted" style="font-size: 0.85rem;">Formula-driven 0.0 to 10.0 score based on Significance (0.25), Feasibility (0.25), Novelty (0.20), Impact (0.15), and Evidence (0.15)</p>
+                    </div>
+                    <span class="badge" id="opportunities-count">0 opportunities</span>
+                </div>
+                <div id="opportunities-list" class="opportunities-grid">
+                    <p class="empty-state">No opportunities identified yet. Complete an analysis first.</p>
+                </div>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- SECTION: Novelty Assessment                                   -->
+            <!-- ============================================================ -->
+            <section class="section" id="section-novelty">
+                <div class="section-header">
+                    <div>
+                        <h3>Novelty Assessment & Differentiation</h3>
+                        <p class="text-muted" style="font-size: 0.85rem;">Literature comparison, differentiating features, and unexplored technical combinations</p>
+                    </div>
+                </div>
+                <div id="novelty-content">
+                    <p class="empty-state">No novelty assessment available yet. Complete an analysis first.</p>
+                </div>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- SECTION: Architecture & Roadmap                               -->
+            <!-- ============================================================ -->
+            <section class="section" id="section-architecture">
+                <div class="section-header">
+                    <div>
+                        <h3>Technical Architecture & 8-Phase Roadmap</h3>
+                        <p class="text-muted" style="font-size: 0.85rem;">System components, end-to-end data pipeline, and actionable milestone execution plan</p>
+                    </div>
+                </div>
+                <div id="architecture-content">
+                    <p class="empty-state">No architecture recommendations yet. Complete an analysis first.</p>
+                </div>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- SECTION: AI Peer Review                                       -->
+            <!-- ============================================================ -->
+            <section class="section" id="section-review">
+                <div class="section-header">
+                    <div>
+                        <h3>Autonomous AI Research Reviewer & Audit</h3>
+                        <p class="text-muted" style="font-size: 0.85rem;">Critical meta-review evaluating logical consistency, empirical evidence, unstated assumptions, and improvement actions</p>
+                    </div>
+                </div>
+                <div id="review-content">
+                    <p class="empty-state">No peer review audit conducted yet. Complete an analysis first.</p>
+                </div>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- SECTION: Export                                               -->
+            <!-- ============================================================ -->
+            <section class="section" id="section-export">
+                <div class="export-card">
+                    <h3>Export Complete Research Intelligence Dossier</h3>
+                    <p class="text-muted" style="margin-bottom: 24px;">
+                        Download all discovered papers, PDF extractions, synthesis tables, 7-taxonomy gaps, tech limitations, opportunity scores, novelty assessments, architecture specs, 8-phase roadmap, and AI peer review audit.
+                    </p>
+                    <div class="export-buttons" id="export-buttons">
+                        <button class="btn btn-primary" onclick="exportJSON()" disabled id="export-json-btn">
+                            <span class="btn-icon">📋</span> Download JSON Dossier
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportMarkdown()" disabled id="export-md-btn">
+                            <span class="btn-icon">📝</span> Download Academic Markdown Report
+                        </button>
+                    </div>
+
+                    <div id="export-preview" class="export-preview-box hidden">
+                        <h4>Report Summary</h4>
+                        <div id="export-preview-content"></div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

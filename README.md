@@ -1,126 +1,82 @@
-# Research Papers Analytics — INNOVATE AI
+# ResearchGap AI
 
-> **Research → Evidence → Gaps → Opportunities → Build**
+**Intelligent Research Paper Analysis & Gap Detection Platform**
 
-**INNOVATE AI** is a production-grade AI Research & Innovation Intelligence Platform that transforms project ideas into evidence-backed opportunities using verified academic literature and structured AI intelligence pipelines.
+An AI-powered research intelligence platform that discovers and analyzes academic papers from OpenAlex, arXiv, Semantic Scholar, and Crossref. Identifies research gaps, technological limitations, and market opportunities using Google Gemini.
 
----
+## Features
 
-## 🌟 Key Capabilities
+- 🔍 **Paper Discovery** — Search 4 academic databases simultaneously
+- 📄 **PDF Extraction** — Extract text from research paper PDFs
+- 🧠 **AI Analysis** — Structured analysis of individual papers using Gemini
+- 🔗 **Evidence Synthesis** — Cross-paper pattern detection and theme analysis
+- 🎯 **Gap Detection** — Evidence-supported research gap identification
+- ⚙️ **Tech Analysis** — Technological limitation identification
+- 💡 **Opportunities** — Market opportunity analysis with weighted scoring
+- 🆕 **Novelty Assessment** — Evaluate research idea originality
+- 🏗️ **Architecture** — System design recommendations
+- 📊 **Dashboard** — Interactive visualizations with Chart.js
+- 📥 **Export** — JSON and Markdown report export
 
-* **Multi-Source Academic Literature Discovery**: Audited paper retrieval across **OpenAlex, arXiv, Semantic Scholar, and Crossref** with 0% mock or fabricated data.
-* **4-Tier Relevance Classification**: Rigorously categorizes every retrieved paper into `DIRECT`, `RELATED`, `BACKGROUND`, and `IRRELEVANT`.
-* **Legal Open-Access Full-Text PDF Extraction**: Downloads and parses open-access scientific PDFs (via `pypdf`) with extraction-level transparency (`Full-text PDF analyzed` vs `Abstract-only analysis`).
-* **Multi-Paper Evidence Clustering**: Synthesizes recurring limitations and future work across literature into evidence-backed Research Gaps, Technology Gaps, and Market Gaps.
-* **Transparent Weighted Opportunity Scoring**: Prioritizes buildable projects using an explainable formula across Research Gap (30%), Market Evidence (20%), Tech Feasibility (20%), Data Availability (10%), Differentiation (10%), and Evidence Confidence (10%).
-* **Objective Novelty Assessment & Build Recommendations**: Generates end-to-end system architectures, 7-phase execution roadmaps, and prior-art similarity assessments.
-* **14-Tab Interactive Intelligence Dashboard**: Built with Next.js 14, Tailwind CSS, Lucide icons, and Recharts.
+## Tech Stack
 
----
+| Component | Technology |
+|-----------|-----------|
+| Backend | Python, FastAPI |
+| Frontend | HTML, CSS, JavaScript |
+| Database | SQLite |
+| AI | Google Gemini API |
+| PDF Processing | PyPDF |
+| Charts | Chart.js |
+| Academic APIs | OpenAlex, arXiv, Semantic Scholar, Crossref |
 
-## 🏗️ Architecture & Technology Stack
-
-```
-USER IDEA
-  │
-  ▼
-Idea Understanding & Query Expansion
-  │
-  ▼
-Multi-Source Academic Repository Search (OpenAlex, arXiv, Semantic Scholar, Crossref)
-  │
-  ▼
-Candidate Deduplication & 4-Tier Relevance Classification (DIRECT / RELATED / BACKGROUND / IRRELEVANT)
-  │
-  ▼
-Legal Open-Access PDF Retrieval & Scientific Document Parsing (pypdf)
-  │
-  ▼
-Multi-Paper Evidence Clustering ──► Research Gaps & Market Gaps
-  │
-  ▼
-Opportunity Synthesis & Weighted Scoring ──► Novelty Assessment
-  │
-  ▼
-Recommended Architecture & 7-Phase Execution Roadmap
-```
-
-### Backend:
-* **FastAPI** (Python 3.12, Async REST API)
-* **SQLAlchemy** + **aiosqlite** (Async SQLite persistence)
-* **Google GenAI SDK / Gemini AI** for structured synthesis
-* **pypdf** & **httpx** for legal open-access PDF extraction
-
-### Frontend:
-* **Next.js 14** (App Router, Server-side proxy rewrites)
-* **TypeScript** & **Tailwind CSS**
-* **Recharts** (Radar score breakdowns, comparative benchmark metrics)
-* **Lucide React** (Modern minimal iconography)
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-* Python 3.10+
-* Node.js 18+ & npm
-* Google Gemini API Key (or OpenAI / Anthropic / Groq)
-
----
-
-### 1. Backend Setup
+## Quick Start
 
 ```bash
-cd backend
+# 1. Create and activate virtual environment
 python -m venv venv
+venv\Scripts\activate          # Windows
+# source venv/bin/activate    # macOS/Linux
 
-# Windows:
-.\venv\Scripts\activate
+# 2. Install dependencies
+pip install -r backend/requirements.txt
 
-# Linux/macOS:
-source venv/bin/activate
+# 3. Configure environment
+copy .env.example .env
+# Edit .env and add your GEMINI_API_KEY
 
-pip install -r requirements.txt
-```
-
-Create `backend/.env`:
-```env
-DATABASE_URL=sqlite+aiosqlite:///./innovate_ai.db
-GEMINI_API_KEY=your_gemini_api_key_here
-CORS_ORIGINS=http://localhost:3000
-```
-
-Start backend:
-```bash
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
-API Documentation will be live at `http://localhost:8000/docs`.
-
----
-
-### 2. Frontend Setup
-
-```bash
-cd frontend
-npm install
-npm run build
-npm run start
-```
-Web App will be live at `http://localhost:3000`.
-
----
-
-## 📊 Verification & Test Scenarios
-
-The platform includes an automated end-to-end validation test:
-
-```bash
+# 4. Run the application
 cd backend
-python test_upgrade_pipeline.py
+uvicorn main:app --reload --port 8000
 ```
 
----
+Then open http://localhost:8000 in your browser.
 
-## 📄 License
+## Project Structure
 
-MIT License. Open-source and free for academic and commercial innovation.
+```
+ResearchGap-AI/
+├── backend/
+│   ├── main.py              # FastAPI entry point
+│   ├── config.py            # Configuration
+│   ├── database.py          # SQLite operations
+│   ├── models.py            # Pydantic models
+│   ├── routes/              # API endpoints
+│   ├── services/            # Business logic
+│   └── utils/               # Helpers
+├── frontend/
+│   ├── index.html           # Dashboard
+│   ├── style.css            # Styles
+│   └── app.js               # Frontend logic
+├── data/                    # Database (auto-created)
+├── .env                     # API keys (not committed)
+└── requirements.txt
+```
+
+## API Documentation
+
+Visit http://localhost:8000/docs for interactive Swagger documentation.
+
+## License
+
+MIT
