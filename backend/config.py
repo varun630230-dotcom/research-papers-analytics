@@ -68,7 +68,13 @@ def get_config():
         
         # --- CORS ---
         # Origins allowed to make requests to our API
-        "CORS_ORIGINS": ["http://localhost:8000", "http://127.0.0.1:8000"],
+        "CORS_ORIGINS": [
+            "http://localhost:8000",
+            "http://127.0.0.1:8000",
+            "https://*.ngrok-free.dev",
+            "https://*.ngrok.io",
+            "https://*.ngrok.app"
+        ],
     }
 
 
